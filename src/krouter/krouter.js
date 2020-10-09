@@ -15,11 +15,13 @@ VueRouter.install = function(_Vue) {
   //1.this.$router.push ==> 将router实例挂在到Vue.proptotype
   Vue.mixin({
     beforeCreate() {
+      // 只有根组件中存在的router new Vue时传入的
       if (this.$options.router) {
         Vue.prototype.$router = this.$options.router;
       }
     },
   });
+  // 实现两个全局的组件 router-link router-view
   Vue.component("router-link", {
     props: {
       to: {
@@ -27,6 +29,7 @@ VueRouter.install = function(_Vue) {
         required: true,
       },
     },
+    // h会返回虚拟dom
     render(h) {
       return h(
         "a",
