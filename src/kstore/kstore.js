@@ -2,15 +2,34 @@ let Vue;
 class Store {
   constructor(options) {
     console.log(options.actions);
+
+    this._mutations = options.mutations;
+    this._actions = options.actions;
+    this._wrappedGetters = options.getters;
+    console.log(this._wrappedGetters);
+    //借助Vue的computed选项 实现数据的缓存
+    const computed = {};
+    this.getters = {}; //暴露给外界
+    const store = this;
+    Object.keys(this._wrappedGetters).forEach((key) => {
+      // 获取用户定义的getter
+      const fn = store._wrappedGetters[key];
+      computed[key] = function() {
+        return fn(store.state);
+      };
+      //为getters定义只读属性
+      Object.defineProperty(store.getters, key, {
+        get: () => store._vm[key], // vm的computed数据会代理到vm上（Vue实现的） 访问getters的数据直相当于直接访问computed的数据
+      });
+    });
     // 借助Vue的date响应式数据来实现vuex的响应式state
     //为了不对外暴露Vue实例
     this._vm = new Vue({
       data: {
         $$state: options.state,
       },
+      computed,
     });
-    this._mutations = options.mutations;
-    this._actions = options.actions;
 
     // 统一修改this指向
     this.commit = this.commit.bind(this);

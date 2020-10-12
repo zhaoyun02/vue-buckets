@@ -1,5 +1,6 @@
 <template>
   <div class="about">
+    <router-view></router-view>
     <h1>This is an about page</h1>
     <p class="pic"> 👇看看这个是我家的狗狗，他叫嘟嘟！</p>
     <img src="../images/1.jpeg"/>

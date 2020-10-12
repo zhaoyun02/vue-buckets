@@ -19,5 +19,14 @@ export default new Vuex.Store({
       }, 1000);
     },
   },
+  getters: {
+    doubleCounter(state) {
+      console.log(22222222);
+      return state.count * 2;
+    },
+    showRandomNum(state) {
+      return "随机数:" + state.randomNum;
+    },
+  },
   modules: {},
 });
