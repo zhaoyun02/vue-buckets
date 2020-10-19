@@ -74,7 +74,144 @@ class KVue {
     // 2. 将$data上的数据代理到vue实例上
     proxy(this);
     // 3.compile 编译
-    new Compile(options.el, this);
+    // new Compile(options.el, this);
+    if (options.el) {
+      this.$mount(options.el);
+    }
+  }
+  $mount(el) {
+    this.$el = document.querySelector(el);
+    //创建更新函数updateComponent
+    const updateComponent = () => {
+      const { render } = this.$options;
+      const vNode = render.call(this, this.$createElement);
+      this._update(vNode);
+      // const parent = this.$el.parentElement;
+      // parent.insertBefore(realDom, this.$el.nextSibling);
+      // parent.removeChild(this.$el);
+      // this.$el = realDom;
+    };
+    //一个组件创建一个watcher
+    new Watcher(this, updateComponent);
+  }
+  $createElement(tag, props, children) {
+    return { tag, props, children };
+  }
+  _update(vnode) {
+    const preVnode = this._vnode;
+    if (!preVnode) {
+      //初始化
+      this._patch_(this.$el, vnode);
+    } else {
+      //更新
+      this._patch_(preVnode, vnode);
+    }
+  }
+  _patch_(oldVnode, vnode) {
+    //初始化
+    if (oldVnode.nodeType) {
+      const parent = oldVnode.parentElement;
+      const refEle = oldVnode.nextSibling;
+      const el = this.createEle(vnode);
+      parent.insertBefore(el, refEle);
+      parent.removeChild(oldVnode);
+      //保存vnode
+      this._vnode = vnode;
+    } else {
+      //更新
+      const el = (vnode.el = oldVnode.el);
+
+      //获取新旧属性props并比对是否更新
+      const oldProps = oldVnode.props || {};
+      const newProps = vnode.props || {};
+      for (const key in newProps) {
+        const oldValue = oldProps[key];
+        const newValue = newProps[key];
+        //属性更新
+        if (oldValue !== newValue) {
+          el.setAttribute(key, newValue);
+        }
+      }
+      //属性删除
+      for (const key in oldProps) {
+        if (!(key in newProps)) {
+          el.removeAttribute(key);
+        }
+      }
+
+      //是否有孩子
+      const oldCh = oldVnode.children;
+      const newCh = vnode.children;
+      //新孩子是字符串
+      if (typeof newCh === "string") {
+        if (typeof oldCh === "string") {
+          if (oldCh !== newCh) {
+            el.textContent = newCh;
+          }
+        } else {
+          el.textContent = newCh;
+        }
+      } else {
+        //新孩子是数组，老孩子是字符串
+        if (typeof oldCh === "string") {
+          el.innerHTML = "";
+          newCh.forEach((child) => this.createEle(child));
+        } else {
+          //新孩子是数组，老孩子是数组
+          this.updateChildren(el, oldCh, newCh);
+        }
+      }
+    }
+  }
+  //新老孩子都是数组时的对比
+  updateChildren(el, oldCh, newCh) {
+    const oldLen = oldCh.length;
+    const newLen = newCh.length;
+    const len = Math.min(oldLen, newLen);
+    //相同位置的替换
+    for (let i = 0; i < len; i++) {
+      this._patch_(oldCh[i], newCh[i]);
+    }
+    //新孩子多则追加，新孩子少则移除
+    if (newLen > oldLen) {
+      newCh.slice(len).forEach((child) => {
+        const c = this.createEle(child);
+        el.appendChild(c);
+      });
+    } else {
+      oldCh.slice(len).forEach((child) => {
+        const c = this.createEle(child);
+        el.removeChild(c);
+      });
+    }
+  }
+  // 创建元素并设置相关属性及对孩子的处理
+  createEle(vnode) {
+    const el = document.createElement(vnode.tag);
+    //设置元素的属性props
+    if (vnode.props) {
+      for (const key in vnode.props) {
+        const value = vnode.props[key];
+        el.setAttribute(key, value);
+      }
+    }
+
+    // 有孩子的情况
+    if (vnode.children) {
+      //孩子为字符串
+      if (typeof vnode.children === "string") {
+        el.textContent = vnode.children;
+      } else {
+        //孩子为数组
+        vnode.children.forEach((node) => {
+          const child = this.createEle(node);
+          el.appendChild(child);
+        });
+      }
+    }
+    // 备用
+    vnode.el = el;
+    return el;
   }
 }
 
@@ -175,29 +312,31 @@ class Compile {
 // let watchers = [];
 // Watcher 的目的是每一个动态绑定的数据都需要一个监视器 （在Compile处为每一个绑定的数据添加这个监视器和相关的更新函数）
 class Watcher {
-  constructor(vm, key, updateFn) {
+  constructor(vm, updateFn) {
     this.$vm = vm;
-    this.key = key;
-    this.updateFn = updateFn;
-    // watchers.push(this);
+    this.getter = updateFn;
+    this.get();
+  }
+  get() {
     // 利用访问this.$vm[key]，触发get 接机将Dep与Watcher关联
     Dep.target = this;
-    this.$vm[key]; //访问触发get
+    this.getter.call(this.$vm);
     Dep.target = null;
   }
   update() {
-    this.updateFn(this.$vm[this.key]);
+    this.get();
   }
 }
 
 // 每个响应式key都与一个Dep关联
 class Dep {
   constructor() {
-    this.deps = [];
+    // 数组去重，防止多个相同的watcher
+    this.deps = new Set();
   }
   // 将wantcher加入到Dep中，以此将二者关联 dep又与响应式数据到key值关联
   addDep(dep) {
-    this.deps.push(dep);
+    this.deps.add(dep);
   }
   // 响应式数据set时，触发更新
   notify() {
