@@ -3,10 +3,10 @@
     <div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link>
-      <p>count:{{ this.$store.state.count }}</p>
+      <!-- <p>count:{{ this.$store.state.count }}</p>
       <p>doubleCounter: {{this.$store.getters.doubleCounter}}</p>
       <p @click="$store.commit('add')">Add</p>
-      <p @click="$store.dispatch('addAsync')">AsyncAdd</p>
+      <p @click="$store.dispatch('addAsync')">AsyncAdd</p> -->
     </div>
     <router-view />
   </div>
