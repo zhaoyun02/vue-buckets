@@ -4,13 +4,13 @@
       {{ label }}
       <span class="sort">
         <i
-          v-if="sort"
+          v-if="sortable"
           class="el-icon-caret-top"
           :class="{ isSelected: isSelectedTop }"
           @click="topClick"
         ></i>
         <i
-          v-if="sort"
+          v-if="sortable"
           class="el-icon-caret-bottom"
           :class="{ isSelected: isSelectedBottom }"
           @click="bottomClick"
@@ -48,13 +48,11 @@ export default {
     return {
       isSelectedTop: false,
       isSelectedBottom: false,
-      sort: this.sortable,
     };
   },
   mounted() {
     if (this.table.defaultSort) {
       if (this.table.defaultSort.prop === this.prop) {
-        this.sort = true;
         if (this.table.defaultSort.order === "descending") {
           this.bottomClick();
         } else if (this.table.defaultSort.order === "ascending") {
