@@ -1,5 +1,5 @@
 <template>
-  <div class='container'>
+  <div class="container">
     <slot></slot>
   </div>
 </template>
@@ -19,15 +19,22 @@ export default {
         return [];
       },
     },
+    defaultSort: {
+      type: Object,
+    },
   },
   mounted() {
-    console.log(this.$children);
+    this.$on("reset", () => {
+      this.$children.forEach((child) => {
+        child.reset();
+      });
+    });
   },
 };
 </script>
 
-<style  scoped>
-  .container{
-    display: flex;
-  }
+<style scoped>
+.container {
+  display: flex;
+}
 </style>

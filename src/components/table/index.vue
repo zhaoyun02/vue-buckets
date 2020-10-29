@@ -1,9 +1,13 @@
 <template>
   <div>
-    <k-table :data="tableData">
-      <k-table-column prop="date" label="日期"></k-table-column>
-      <k-table-column prop="name" label="姓名"></k-table-column>
-      <k-table-column prop="address" label="地址"></k-table-column>
+    <k-table
+      :data="tableData"
+      :defaultSort="{ prop: 'id', order: 'descending' }"
+    >
+      <k-table-column prop="id" label="顺序" sortable></k-table-column>
+      <k-table-column prop="date" label="日期" sortable></k-table-column>
+      <k-table-column prop="name" label="姓名" sortable></k-table-column>
+      <k-table-column prop="address" label="地址" sortable></k-table-column>
       <k-table-column label="操作">
         <!-- 自定义列模板 作用域插槽-->
         <template v-slot="slotProps">
@@ -45,6 +49,7 @@ export default {
           address: "上海市普陀区金沙江路 1519 弄",
         },
         {
+          id: 4,
           date: "2016-05-03",
           name: "王小4",
           address: "上海市普陀区金沙江路 1516 弄",
